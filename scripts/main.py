@@ -16,7 +16,7 @@ class FBIReporter(scripts.Script):
     # Encoded in base64 so shithub doesn't ban me.
     encoded_banned_words = ["bG9saQ==", "bG9saXRh", "Y3V0ZQ==", "ZnVubnk=", "Y3Vubnk=", "Y2hpbGQ=", "bGl0dGxl", "Z2lybA==", "YWxpY2U=", "Y2hpbGQgcG9ybg==", "Y2hlZXNlIHBpenph", "YW5hbA==", "YW51cw==", "YXJzZQ==", "YXNz", "YmFsbHNhY2s=", "Ymxvb2R5", "Ymxvd2pvYg==", "YmxvdyBqb2I=", "Ym9sbG9jaw==",
                             "Ym9sbG9r", "Ym9uZXI=", "Ym9vYg==", "YnVnZ2Vy", "YnVt", "YnV0dA==", "YnV0dHBsdWc=", "Y2xpdG9yaXM=", "Y29jaw==", "Y3VudA==", "ZGljaw==", "ZGlsZG8=", "ZHlrZQ==", "ZmFn", "ZmVsbGF0ZQ==", "ZmVsbGF0aW8=", "aml6eg==", "bGFiaWE=", "cGVuaXM=", "cHViZQ==", "cHVzc3k=",
-                            "c2Nyb3R1bQ==", "dmFnaW5h", "c2V4", "ZXJvdGlj", "bnVkZQ==", "bmFrZWQ=", "YnJlYXN0"]
+                            "c2Nyb3R1bQ==", "dmFnaW5h", "c2V4", "ZXJvdGlj", "bnVkZQ==", "bmFrZWQ=", "YnJlYXN0", "ZmxhdCBjaGVzdA=="]
     banned_words = []
     for word in encoded_banned_words:
         banned_words.append(b64decode(word).decode())
@@ -96,7 +96,7 @@ class FBIReporter(scripts.Script):
 
 
 def on_ui_settings():
-    shared.opts.add_option("report_to_fbi", shared.OptionInfo(True, "Automatically report unsafe prompts to the FBI.", section=("trust_safety", "Trust & Safety")))
+    shared.opts.add_option("report_to_fbi", shared.OptionInfo(True, "Automatically report unsafe prompts to the FBI", section=("trust_safety", "Trust & Safety")))
 
 
 script_callbacks.on_ui_settings(on_ui_settings)
