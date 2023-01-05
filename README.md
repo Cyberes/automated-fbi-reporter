@@ -1,2 +1,4 @@
-# stable-diffusion-automatic-fbi-reporter
-Automatically report unsafe prompts to the FBI.
+# stable-diffusion-automated-fbi-reporter
+
+_Automatically report unsafe prompts to the FBI._
+
