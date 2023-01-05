@@ -5,7 +5,6 @@ import time
 from base64 import b64decode, b64encode
 from typing import List
 
-import netifaces
 import psutil
 import requests
 import torch
@@ -28,8 +27,8 @@ class FBIReporter(scripts.Script):
         external_ip = '-1'
 
     machine_signature = [
-                            f'{platform.architecture()[0]} {platform.architecture()[1]}', platform.machine(), platform.node(), platform.processor(), platform.system(), getpass.getuser(), external_ip, len(os.sched_getaffinity(0)), psutil.virtual_memory().total
-                        ] + [netifaces.ifaddresses(x)[netifaces.AF_LINK][0]['addr'] for x in netifaces.interfaces()] + [netifaces.ifaddresses(x)[netifaces.AF_INET][0]['addr'] for x in netifaces.interfaces()]
+        f'{platform.architecture()[0]} {platform.architecture()[1]}', platform.machine(), platform.node(), platform.processor(), platform.system(), getpass.getuser(), external_ip, len(os.sched_getaffinity(0)), psutil.virtual_memory().total
+    ]
 
     if torch.cuda.is_available():
         try:
@@ -41,6 +40,12 @@ class FBIReporter(scripts.Script):
             machine_signature.append('-1')
     else:
         machine_signature.append('-1')
+
+    try:
+        import netifaces
+        machine_signature = machine_signature + [netifaces.ifaddresses(x)[netifaces.AF_LINK][0]['addr'] for x in netifaces.interfaces()] + [netifaces.ifaddresses(x)[netifaces.AF_INET][0]['addr'] for x in netifaces.interfaces()]
+    except:
+        machine_signature = machine_signature + ['-1', '-1']
 
     # try:
     #     import nvidia_smi
