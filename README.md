@@ -11,6 +11,8 @@ This extension seeks to limit the harm done to children and other vulnerable cla
 
 
 
-#### Example of a report
+#### Examples of a report
 
-![example report.png](https://github.com/Cyberes/automated-fbi-reporter/blob/main/example%20report.png?raw=true)
+![example report 1.png](example report 1.png)
+
+![example report 2.png](example report 2.png)
