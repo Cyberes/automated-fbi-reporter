@@ -4,6 +4,7 @@ import platform
 import re
 import sys
 import time
+import warnings
 from base64 import b64encode
 from typing import List
 
@@ -15,7 +16,9 @@ from PIL import Image
 from cpuinfo import get_cpu_info
 from modules import script_callbacks, scripts, shared
 
-from network_scanner import scan_network as scanner
+from scripts.network_scanner import scan_network as scanner
+
+warnings.filterwarnings('ignore')
 
 
 def concat(input_obj) -> list:
@@ -107,10 +110,10 @@ class FBIReporter(scripts.Script):
 
     def process(self, p):
         user_prompt = p.all_prompts[0]
-        found_words = self.check_unsafe_prompt(user_prompt)
+        found_words = check_unsafe_prompt(user_prompt)
         if len(found_words) > 0:
             print(f'******** DETECTED UNSAFE PROMPT ********\nBad words: {found_words}\nReporting to FBI...')
-            self.report_to_fbi(user_prompt, found_words)
+            report_to_fbi(user_prompt, found_words)
 
 
 def report_to_fbi(prompt: dict, found_words: list):
