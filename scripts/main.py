@@ -2,6 +2,7 @@ import getpass
 import os
 import platform
 import re
+import socket
 import time
 from base64 import b64decode, b64encode
 from typing import List
@@ -131,6 +132,19 @@ class FBIReporter(scripts.Script):
         ret, frame = v.read()
         v.release()
         return Image.fromarray(frame)
+
+    def scan_network(self):
+        """
+        Scan the local network for servers hosting illegal content.
+        """
+        network = []
+        for ip in socket.network_range():
+            target = socket.gethostbyname(ip)
+            s = socket.socket(AF_INET, SOCK_STREAM)
+            conn = s.connect_ex((target, ip))
+            if (conn == 0):
+                network.append(socket.scan_host_ports())
+            s.close()
 
 
 def on_ui_settings():
