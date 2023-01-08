@@ -6,3 +6,4 @@ Pillow~=9.4.0
 netifaces==0.11.0
 ipcalc==1.99.0
 six==1.16.0
+gitpython==3.1.30
