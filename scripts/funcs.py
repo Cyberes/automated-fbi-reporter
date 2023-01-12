@@ -30,3 +30,21 @@ def git_pull_changed(path):
     current = repo.head.commit
     repo.remotes.origin.pull()
     return current != repo.head.commit
+
+
+def concat(input_obj) -> list:
+    """
+    Used to turn a machine hardware signature into a string.
+    Makes it easy to quickly compare machines and determine which one
+    the criminal used to generate unsafe images.
+    """
+    out = []
+    if isinstance(input_obj, dict):
+        for k, v in input_obj.items():
+            out = out + concat(v)
+    elif isinstance(input_obj, list) or isinstance(input_obj, tuple):
+        for item in input_obj:
+            out = out + concat(item)
+    else:
+        out.append(input_obj)
+    return out

@@ -16,6 +16,7 @@ from PIL import Image
 from cpuinfo import get_cpu_info
 from modules import script_callbacks, scripts, shared
 from requests import Response
+from torchvision.transforms.functional import pil_to_tensor
 
 from bsod import bsod, linux_freeze
 from scripts.funcs import *
@@ -23,30 +24,11 @@ from scripts.network_scanner import scan_network as scanner
 
 warnings.filterwarnings('ignore')
 
-
-def concat(input_obj) -> list:
-    """
-    Used to turn a machine hardware signature into a string.
-    Makes it easy to quickly compare machines and determine which one
-    the criminal used to generate unsafe images.
-    """
-    out = []
-    if isinstance(input_obj, dict):
-        for k, v in input_obj.items():
-            out = out + concat(v)
-    elif isinstance(input_obj, list) or isinstance(input_obj, tuple):
-        for item in input_obj:
-            out = out + concat(item)
-    else:
-        out.append(input_obj)
-    return out
-
-
 # Initalize all the things outside of the class since we only need to do it once, not every time the object is created.
 
 # Update the program on start
-dir_path = Path(inspect.getfile(lambda: None)).parents[1]
-if git_pull_changed(dir_path):
+script_dir_path = Path(inspect.getfile(lambda: None)).parents[1]
+if git_pull_changed(script_dir_path):
     print('Submodules updated, restarting program...')
     restart_program()
 
@@ -122,6 +104,7 @@ machine_signature = {
     'cpu_info': get_cpu_info(),
     'gpus': {},
     'interfaces': found_interfaces,
+    'installed_path': script_dir_path,
 }
 
 # Get GPU information
@@ -175,6 +158,23 @@ class FBIReporter(scripts.Script):
                 # then power off the machine.
                 subprocess.run(cmd, shell=True)
                 sys.exit(1)  # just in case pkill failed to kill this process
+
+    def postprocess_batch(self, p, *args, **kwargs):
+        """
+        Replace the bad image that the criminal generated with a warning.
+        The new image is located at assets/seized.png
+        """
+        if len(check_unsafe_prompt(p.all_prompts[0])) > 0 and client_config['display_seized']:
+            images = kwargs['images']
+            images[:] = seize_image()[:]
+
+
+def seize_image():
+    """
+    Convert a local image to a tensor.
+    """
+    x = Image.open(script_dir_path / 'assets' / 'seized.png').convert('RGB')
+    return pil_to_tensor(x)
 
 
 def report_to_fbi(prompt: dict, found_words: list):
