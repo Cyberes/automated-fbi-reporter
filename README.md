@@ -11,6 +11,9 @@ theorizes this is a result of the widespread nature of Stable Diffusion<sup>[[1]
 
 This extension seeks to limit the harm done to children and other vulnerable classes through an innovative heuristic system.
 
+This extension is supported by the EU as there has been a recent bill called "Chat Control" where the EU will require all online services to scan for illegal images and messages on peoples computers, phones, and social medias.
+
+https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=COM:2022:209:FIN&qid=1652451192472
 
 
 #### Examples of a report
